@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jordanian Arabic Practice Tool</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 30px 0 20px;
+    border-bottom: 1px solid #1e293b;
+    margin-bottom: 24px;
+  }
+  .header h1 { font-size: 1.6em; color: #f8fafc; margin-bottom: 6px; }
+  .header p { color: #94a3b8; font-size: 0.95em; }
+  .streak {
+    display: inline-block;
+    background: #1e293b;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-top: 10px;
+    font-size: 0.85em;
+    color: #fbbf24;
+  }
+
+  /* Navigation */
+  .nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .nav-btn {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+    padding: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  .nav-btn:hover { background: #334155; border-color: #4f9cf7; }
+  .nav-btn .icon { font-size: 1.4em; display: block; margin-bottom: 6px; }
+  .nav-btn .label { font-weight: 600; }
+  .nav-btn .desc { font-size: 0.8em; color: #94a3b8; margin-top: 4px; }
+
+  /* Cards */
+  .card {
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 16px;
+    border: 1px solid #334155;
+  }
+
+  /* Flashcard */
+  .flashcard {
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    user-select: none;
+  }
+  .flashcard:hover { border-color: #4f9cf7; }
+  .flashcard .arabic { font-size: 2.4em; margin-bottom: 12px; direction: rtl; font-family: 'Noto Sans Arabic', 'Geeza Pro', 'Traditional Arabic', serif; }
+  .flashcard .translit { font-size: 1.1em; color: #94a3b8; margin-bottom: 8px; }
+  .flashcard .english { font-size: 1.2em; color: #4ade80; }
+  .flashcard .tap-hint { color: #475569; font-size: 0.85em; margin-top: 16px; }
+  .flashcard .day-tag { font-size: 0.75em; color: #64748b; background: #0f172a; padding: 3px 10px; border-radius: 10px; margin-bottom: 12px; }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+  .btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    border: none;
+    font-size: 1em;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .btn-yes { background: #166534; color: #fff; }
+  .btn-yes:hover { background: #15803d; }
+  .btn-no { background: #991b1b; color: #fff; }
+  .btn-no:hover { background: #b91c1c; }
+  .btn-skip { background: #334155; color: #94a3b8; }
+  .btn-skip:hover { background: #475569; }
+  .btn-primary { background: #2563eb; color: #fff; }
+  .btn-primary:hover { background: #3b82f6; }
+  .btn-back { background: #334155; color: #94a3b8; }
+  .btn-back:hover { background: #475569; color: #e2e8f0; }
+
+  /* Progress bar */
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #334155;
+    border-radius: 3px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #4f9cf7);
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+  .progress-text { text-align: center; color: #94a3b8; font-size: 0.85em; margin-bottom: 12px; }
+
+  /* Quiz */
+  .quiz-prompt { font-size: 1.3em; text-align: center; margin-bottom: 20px; }
+  .quiz-prompt .highlight { color: #fbbf24; }
+  .quiz-input {
+    width: 100%;
+    padding: 14px;
+    background: #0f172a;
+    border: 2px solid #334155;
+    border-radius: 10px;
+    color: #e2e8f0;
+    font-size: 1.1em;
+    text-align: center;
+    outline: none;
+  }
+  .quiz-input:focus { border-color: #4f9cf7; }
+  .quiz-input::placeholder { color: #475569; }
+  .quiz-feedback {
+    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 12px;
+    font-size: 1em;
+  }
+  .quiz-feedback.correct { background: #052e16; color: #4ade80; }
+  .quiz-feedback.wrong { background: #450a0a; color: #fca5a5; }
+
+  /* Score */
+  .score-card {
+    text-align: center;
+    padding: 30px;
+  }
+  .score-card .big-score { font-size: 3em; font-weight: 700; color: #4f9cf7; }
+  .score-card .score-label { color: #94a3b8; margin-top: 4px; }
+  .score-bar {
+    width: 100%;
+    height: 12px;
+    background: #334155;
+    border-radius: 6px;
+    margin: 20px 0;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.5s;
+  }
+  .score-msg { margin-top: 12px; font-size: 1.05em; }
+
+  /* Conjugation */
+  .conj-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  .conj-table td, .conj-table th {
+    padding: 10px 14px;
+    border-bottom: 1px solid #1e293b;
+    text-align: center;
+  }
+  .conj-table th { color: #94a3b8; font-weight: 500; font-size: 0.85em; }
+  .conj-table .pronoun { color: #fbbf24; font-size: 1.1em; direction: rtl; }
+  .conj-table input {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+    padding: 8px;
+    border-radius: 6px;
+    width: 120px;
+    text-align: center;
+    font-size: 1em;
+    direction: rtl;
+  }
+  .conj-table input:focus { border-color: #4f9cf7; outline: none; }
+  .conj-table .correct-cell { color: #4ade80; }
+  .conj-table .wrong-cell { color: #f87171; }
+
+  /* Day selector */
+  .day-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .day-btn {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    padding: 10px 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    text-align: center;
+  }
+  .day-btn:hover { border-color: #4f9cf7; color: #e2e8f0; }
+  .day-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+  .week-label { color: #64748b; font-size: 0.8em; margin-top: 12px; margin-bottom: 6px; }
+
+  /* Missed words */
+  .missed-list { margin-top: 16px; }
+  .missed-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #0f172a;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    direction: rtl;
+  }
+  .missed-item .ar { font-size: 1.1em; }
+  .missed-item .en { color: #94a3b8; direction: ltr; }
+
+  /* Conversation */
+  .chat-bubble {
+    padding: 12px 18px;
+    border-radius: 16px;
+    margin-bottom: 10px;
+    max-width: 85%;
+    line-height: 1.5;
+  }
+  .chat-bubble.them {
+    background: #334155;
+    border-bottom-left-radius: 4px;
+    margin-right: auto;
+  }
+  .chat-bubble.you {
+    background: #1e3a5f;
+    border-bottom-right-radius: 4px;
+    margin-left: auto;
+  }
+  .chat-speaker { font-size: 0.75em; color: #64748b; margin-bottom: 4px; }
+  .chat-arabic { direction: rtl; font-size: 1.15em; margin-bottom: 4px; }
+  .chat-translit { font-size: 0.85em; color: #94a3b8; font-style: italic; }
+
+  .hidden { display: none !important; }
+
+  /* Responsive */
+  @media (max-width: 500px) {
+    .nav { grid-template-columns: 1fr; }
+    .day-grid { grid-template-columns: repeat(4, 1fr); }
+    .flashcard .arabic { font-size: 1.8em; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Jordanian Arabic Practice</h1>
+    <p>21-Day Fluency Program</p>
+    <div class="streak" id="streakDisplay">0 day streak</div>
+  </div>
+
+  <!-- Main Menu -->
+  <div id="menu">
+    <div class="nav">
+      <button class="nav-btn" onclick="startFlashcards()">
+        <span class="icon">&#x1F4DA;</span>
+        <span class="label">Flashcards</span>
+        <span class="desc">Spaced repetition review</span>
+      </button>
+      <button class="nav-btn" onclick="startQuiz('en2ar')">
+        <span class="icon">&#x1F4DD;</span>
+        <span class="label">English &rarr; Arabic</span>
+        <span class="desc">Translation quiz</span>
+      </button>
+      <button class="nav-btn" onclick="startQuiz('ar2en')">
+        <span class="icon">&#x1F504;</span>
+        <span class="label">Arabic &rarr; English</span>
+        <span class="desc">Reverse translation</span>
+      </button>
+      <button class="nav-btn" onclick="startConjugation()">
+        <span class="icon">&#x1F524;</span>
+        <span class="label">Conjugation Drill</span>
+        <span class="desc">Verb forms practice</span>
+      </button>
+      <button class="nav-btn" onclick="startConversation()">
+        <span class="icon">&#x1F4AC;</span>
+        <span class="label">Conversations</span>
+        <span class="desc">Real-world dialogues</span>
+      </button>
+      <button class="nav-btn" onclick="showStats()">
+        <span class="icon">&#x1F4CA;</span>
+        <span class="label">Progress</span>
+        <span class="desc">Your stats & streak</span>
+      </button>
+    </div>
+    <div id="daySelector">
+      <p style="color:#94a3b8;font-size:0.9em;margin-bottom:8px;">Filter by day (or leave blank for all):</p>
+      <div class="week-label">Week 1: Foundations</div>
+      <div class="day-grid">
+        <button class="day-btn" data-day="1" onclick="toggleDay(this)">Day 1</button>
+        <button class="day-btn" data-day="2" onclick="toggleDay(this)">Day 2</button>
+        <button class="day-btn" data-day="3" onclick="toggleDay(this)">Day 3</button>
+        <button class="day-btn" data-day="4" onclick="toggleDay(this)">Day 4</button>
+        <button class="day-btn" data-day="5" onclick="toggleDay(this)">Day 5</button>
+        <button class="day-btn" data-day="6" onclick="toggleDay(this)">Day 6</button>
+      </div>
+      <div class="week-label">Week 2: Conversations</div>
+      <div class="day-grid">
+        <button class="day-btn" data-day="8" onclick="toggleDay(this)">Day 8</button>
+        <button class="day-btn" data-day="9" onclick="toggleDay(this)">Day 9</button>
+        <button class="day-btn" data-day="10" onclick="toggleDay(this)">Day 10</button>
+        <button class="day-btn" data-day="12" onclick="toggleDay(this)">Day 12</button>
+        <button class="day-btn" data-day="13" onclick="toggleDay(this)">Day 13</button>
+      </div>
+      <div class="week-label">Week 3: Fluency</div>
+      <div class="day-grid">
+        <button class="day-btn" data-day="15" onclick="toggleDay(this)">Day 15</button>
+        <button class="day-btn" data-day="16" onclick="toggleDay(this)">Day 16</button>
+        <button class="day-btn" data-day="20" onclick="toggleDay(this)">Day 20</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Area -->
+  <div id="activity" class="hidden"></div>
+</div>
+
+<script>
+// ============ VOCABULARY DATABASE ============
+const VOCAB = {
+  1: [
+    ["مرحبا","mar7aba","Hello"],
+    ["أهلا وسهلا","ahla w sahla","Welcome"],
+    ["كيفك؟","keefak?","How are you? (m)"],
+    ["الحمد لله","il-7amdu lillah","Thank God / Fine"],
+    ["تمام","tamaam","Good / Perfect"],
+    ["شو اسمك؟","shu ismak?","What's your name? (m)"],
+    ["اسمي","ismi","My name is"],
+    ["تشرفنا","tsharrafna","Pleased to meet you"],
+    ["من وين إنت؟","min wein inte?","Where are you from?"],
+    ["أنا من","ana min","I'm from"],
+    ["صباح الخير","9abaa7 il-kheir","Good morning"],
+    ["صباح النور","9abaa7 in-noor","Good morning (response)"],
+    ["مساء الخير","masa2 il-kheir","Good evening"],
+    ["مع السلامة","ma3 is-salaame","Goodbye"],
+    ["يعطيك العافية","ya36eek il-3aafye","May God give you strength"],
+    ["بحكي شوي عربي","ba7ki shwayy 3arabi","I speak a little Arabic"],
+    ["بتعلم عربي","bat3allam 3arabi","I'm learning Arabic"],
+    ["إن شاء الله","inshaallah","God willing"],
+    ["والله","wallah","I swear / Really"],
+    ["يلا","yalla","Let's go / Come on"],
+    ["طيب","6ayyib","OK / Good"],
+    ["يعني","ya3ni","It means / Like"],
+  ],
+  2: [
+    ["عيلة","3eile","family"],["أب / بابا","ab / baaba","father / dad"],["أم / ماما","umm / maama","mother / mom"],
+    ["أخ","akh","brother"],["أخت","ukht","sister"],["إبن","ibin","son"],["بنت","bint","daughter / girl"],
+    ["زوج","zooj","husband"],["زوجة","zooje","wife"],["كبير","kbeer","big"],["صغير","z-gheer","small"],
+    ["طويل","6aweel","tall / long"],["حلو","7ilu","sweet / pretty"],["منيح","mnee7","good"],
+    ["عندي","3indi","I have"],["ما عندي","maa 3indi","I don't have"],["كتير","kteer","very / a lot"],
+    ["شوي","shwayy","a little"],["هاد","haad","this (m)"],["بس","bass","but / only"],["كمان","kamaan","also / too"],
+  ],
+  3: [
+    ["واحد","waa7ad","one"],["اثنين","ithnein","two"],["ثلاثة","thalathe","three"],["أربعة","arba3a","four"],
+    ["خمسة","khamse","five"],["عشرة","3ashara","ten"],["عشرين","3ishreen","twenty"],["مية","miyye","hundred"],
+    ["اليوم","il-yoom","today"],["بكرة","bukra","tomorrow"],["إمبارح","imbaarih","yesterday"],
+    ["الساعة","is-saa3a","the hour / clock"],["و نص","w nu99","and half"],["و ربع","w rub3","quarter past"],
+    ["هلأ / هسا","halla2 / hassa","now"],["بعدين","ba3dein","later"],["إمتى؟","imta?","When?"],
+    ["الجمعة","ij-jum3a","Friday"],["كل يوم","kull yoom","every day"],
+  ],
+  4: [
+    ["بروح","baroo7","I go"],["باكل","baakul","I eat"],["بشرب","bashrab","I drink"],["بنام","banaam","I sleep"],
+    ["بشتغل","bashtaghil","I work"],["بحكي","ba7ki","I speak"],["بفهم","bafham","I understand"],
+    ["بعرف","ba3rif","I know"],["بحب","ba7ibb","I love/like"],["بشوف","bashoof","I see"],
+    ["بقوم من النوم","ba2oom min in-noom","I wake up"],["بطلع من البيت","ba6la3 min il-beit","I leave the house"],
+    ["شو؟","shu?","What?"],["مين؟","meen?","Who?"],["وين؟","wein?","Where?"],["ليش؟","leish?","Why?"],
+    ["كيف؟","keef?","How?"],["قديش؟","2addeish?","How much?"],["ما بعرف","maa ba3rif","I don't know"],
+    ["ما بفهم","maa bafham","I don't understand"],
+  ],
+  5: [
+    ["أكل","akil","food"],["خبز","khubz","bread"],["رز","ruzz","rice"],["لحمة","la7me","meat"],
+    ["دجاج","djaaj","chicken"],["منسف","mansaf","mansaf (national dish)"],["شاي","shaay","tea"],
+    ["قهوة","2ahwe","coffee"],["ميّ","mayy","water"],["بدي","biddi","I want"],["ممكن","mumkin","Can I / possible"],
+    ["لو سمحت","law sama7t","please / excuse me"],["الحساب","il-7saab","the bill"],["زاكي","zaaki","delicious"],
+    ["تسلم إيديك","tislam ideik","Bless your hands"],["صحتين","9a7tein","Bon appétit"],
+    ["بدون","bidoon","without"],["شو بتنصحني؟","shu bitinsa7ni?","What do you recommend?"],
+  ],
+  6: [
+    ["يمين","yameen","right"],["شمال","shmaal","left"],["دغري","dughri","straight"],["قريب","2areeb","near"],
+    ["بعيد","b3eed","far"],["هون","hoon","here"],["لف يمين","liff yameen","turn right"],
+    ["روح دغري","roo7 dughri","go straight"],["تاكسي","taksi","taxi"],["باص","baa9","bus"],
+    ["شارع","shaari3","street"],["مطعم","ma63am","restaurant"],["صيدلية","9aidaliyye","pharmacy"],
+    ["فندق","fundu2","hotel"],["مطار","ma6aar","airport"],["وقف هون","wa22if hoon","stop here"],
+    ["غالي","ghaali","expensive"],["قديش بدك؟","2addeish biddak?","How much do you want?"],
+  ],
+  8: [
+    ["رحت","ru7t","I went"],["إجيت","ijeet","I came"],["أكلت","akalt","I ate"],["شربت","shribt","I drank"],
+    ["شفت","shuft","I saw"],["حكيت","7akeet","I spoke/said"],["اشتغلت","ishtazhalt","I worked"],
+    ["اشتريت","ishtareit","I bought"],["كان","kaan","was (he)"],["كنت","kunt","was (I)"],
+    ["إمبارح","imbaarih","yesterday"],["الأسبوع الماضي","il-usboo3 il-maa9i","last week"],
+    ["لما","lamma","when (past)"],["وبعدين","w ba3dein","and then"],["لأنه","la2innu","because"],
+    ["من زمان","min zamaan","long time ago"],
+  ],
+  9: [
+    ["سوق","soo2","market"],["فلوس","floos","money"],["دينار","deenaar","dinar"],["غالي","ghaali","expensive"],
+    ["رخيص","rkhee9","cheap"],["أكبر","akbar","bigger"],["أصغر","azghar","smaller"],["أرخص","arkha9","cheaper"],
+    ["أحسن","a7san","better"],["بدور على","badawwir 3ala","I'm looking for"],["آخر سعر","aakhir si3r","final price"],
+    ["بأخده","baakhdu","I'll take it"],["أحمر","a7mar","red"],["أزرق","azra2","blue"],
+    ["أبيض","abya9","white"],["أسود","aswad","black"],
+  ],
+  10: [
+    ["برأيي","bira2yi","in my opinion"],["بفضل","bfa99il","I prefer"],["صح","9a7","correct"],
+    ["أكيد","akeed","of course"],["معك حق","ma3ak 7a22","you're right"],
+    ["مش بالضرورة","mish bi9-9aroora","not necessarily"],["عادي","3aadi","normal / no big deal"],
+    ["لازم","laazim","must / should"],["مش لازم","mish laazim","not necessary"],
+    ["على حسب","3ala 7asab","it depends"],["يا ريت","ya reit","I wish"],["الصراحة","i9-9araa7a","honestly"],
+  ],
+  12: [
+    ["راس","raas","head"],["عين","3ein","eye"],["بطن","ba6n","stomach"],["ظهر","6ahur","back"],
+    ["بوجعني","biwja3ni","it hurts me"],["صداع","9udaa3","headache"],["حرارة","7araara","fever"],
+    ["دوا","dawa","medicine"],["حبوب","7uboob","pills"],["مستشفى","mustashfa","hospital"],
+    ["دكتور","duktoor","doctor"],["ساعدوني","saa3idooni","help me"],["حساسية","7asaasiyye","allergy"],
+  ],
+  13: [
+    ["رح أروح","ra7 aroo7","I will go"],["رح آكل","ra7 aakul","I will eat"],["مش رح","mish ra7","won't"],
+    ["الأسبوع الجاي","il-usboo3 ij-jaay","next week"],["قريبا","2areeban","soon"],
+    ["بدك تيجي؟","biddak tiiji?","Do you want to come?"],["فاضي","faa9i","free (available)"],
+    ["مشغول","mashghool","busy"],["نتلاقى","nitlaa2a","we meet"],
+    ["إن شاء الله مرة تانية","inshaallah marra taanye","another time, God willing"],
+    ["بشوفك","bshoofak","I'll see you"],
+  ],
+  15: [
+    ["إذا","idha","if (real)"],["لو","law","if (hypothetical)"],["يا ريت","ya reit","I wish"],
+    ["بقدر","ba2dar","I can"],["ما بقدر","maa ba2dar","I can't"],
+    ["المفروض","il-mafroo9","supposed to / should"],["حتى لو","7atta law","even if"],
+  ],
+  16: [
+    ["يا زلمة","ya zalame","dude"],["يا عمي","ya 3ammi","uncle / bro"],
+    ["زي الزفت","zay iz-zift","terrible (lit: like tar)"],["مية بالمية","miyye bil-miyye","100% / absolutely"],
+    ["ما إلي خلق","maa ili khul2","I can't be bothered"],["دمه خفيف","dammu khafeef","funny/likeable person"],
+    ["فش","fish","there isn't"],["خلص","khala9","done / enough"],["مش معقول","mish ma32ool","unbelievable"],
+    ["تكرم عينك","tikram 3einak","of course / gladly"],["على راسي","3ala raasi","with pleasure"],
+  ],
+  20: [
+    ["تفضل","tfa99al","please (come in/sit/eat)"],["البيت بيتك","il-beit beitak","make yourself at home"],
+    ["ما قصرت","maa 2a99art","you've been too kind"],["بسم الله","bismillah","in the name of God"],
+    ["ما شاء الله","mashaallah","God has willed it (admiration)"],["الله يرحمه","allah yir7amu","God rest his soul"],
+    ["الله يشفيه","allah yishfeeh","God heal him"],["مبروك","mabrook","congratulations"],
+    ["الله يبارك فيك","allah ybaarik feek","God bless you"],["حرام عليك","7araam 3aleik","shame on you"],
+  ],
+};
+
+const CONJUGATIONS = {
+  "راح — to go (present)": {
+    "أنا":"بروح","إنتَ":"بتروح","إنتِ":"بتروحي","هو":"بروح",
+    "هي":"بتروح","إحنا":"بنروح","إنتو":"بتروحو","هم":"بروحو"
+  },
+  "راح — to go (past)": {
+    "أنا":"رحت","إنتَ":"رحت","إنتِ":"رحتي","هو":"راح",
+    "هي":"راحت","إحنا":"رحنا","إنتو":"رحتو","هم":"راحو"
+  },
+  "أكل — to eat (present)": {
+    "أنا":"باكل","إنتَ":"بتاكل","إنتِ":"بتاكلي","هو":"بوكل",
+    "هي":"بتاكل","إحنا":"بناكل","إنتو":"بتاكلو","هم":"بوكلو"
+  },
+  "أكل — to eat (past)": {
+    "أنا":"أكلت","إنتَ":"أكلت","إنتِ":"أكلتي","هو":"أكل",
+    "هي":"أكلت","إحنا":"أكلنا","إنتو":"أكلتو","هم":"أكلو"
+  },
+  "كان — was (past)": {
+    "أنا":"كنت","إنتَ":"كنت","إنتِ":"كنتي","هو":"كان",
+    "هي":"كانت","إحنا":"كنا","إنتو":"كنتو","هم":"كانو"
+  },
+  "حكى — to speak (present)": {
+    "أنا":"بحكي","إنتَ":"بتحكي","إنتِ":"بتحكي","هو":"بحكي",
+    "هي":"بتحكي","إحنا":"بنحكي","إنتو":"بتحكو","هم":"بحكو"
+  },
+  "شاف — to see (past)": {
+    "أنا":"شفت","إنتَ":"شفت","إنتِ":"شفتي","هو":"شاف",
+    "هي":"شافت","إحنا":"شفنا","إنتو":"شفتو","هم":"شافو"
+  },
+};
+
+const CONVERSATIONS = [
+  {
+    title: "Meeting Someone New",
+    lines: [
+      ["Them","مرحبا! كيفك؟","mar7aba! keefak?","Hello! How are you?"],
+      ["You","الحمد لله، تمام. وإنت؟","il-7amdu lillah, tamaam. w inte?","Fine, thank God. And you?"],
+      ["Them","تمام. شو اسمك؟","tamaam. shu ismak?","Good. What's your name?"],
+      ["You","اسمي ___. تشرفنا.","ismi ___. tsharrafna.","My name is ___. Pleased to meet you."],
+      ["Them","أهلا وسهلا. من وين إنت؟","ahla w sahla. min wein inte?","Welcome. Where are you from?"],
+      ["You","أنا من ___. بتعلم عربي.","ana min ___. bat3allam 3arabi.","I'm from ___. I'm learning Arabic."],
+      ["Them","والله؟ عربيك منيح!","wallah? 3arabiyyak mnee7!","Really? Your Arabic is good!"],
+      ["You","الله يخليك! لسا بتعلم.","allah ykhalleek! lissa bat3allam.","Thank you! Still learning."],
+    ]
+  },
+  {
+    title: "Ordering at a Restaurant",
+    lines: [
+      ["Waiter","أهلا وسهلا! تفضلو.","ahla w sahla! tfa99alu.","Welcome! Come in."],
+      ["You","شكرا. في طاولة لاثنين؟","shukran. fii 6aawle la-ithnein?","Thanks. Table for two?"],
+      ["Waiter","تفضلو هون. هاي المنيو.","tfa99alu hoon. haay il-menyu.","Sit here. Here's the menu."],
+      ["You","شو بتنصحنا؟","shu bitinsa7na?","What do you recommend?"],
+      ["Waiter","المنسف زاكي كتير اليوم.","il-mansaf zaaki kteer il-yoom.","The mansaf is great today."],
+      ["You","طيب. بدي منسف. لو سمحت.","6ayyib. biddi mansaf. law sama7t.","OK. I want mansaf. Please."],
+      ["Waiter","تشرب شي؟","tishrab shi?","Drink anything?"],
+      ["You","شاي بالميرمية.","shaay bil-meiramiyye.","Sage tea."],
+      ["You","الحساب، لو سمحت.","il-7saab, law sama7t.","The bill, please."],
+    ]
+  },
+  {
+    title: "Getting a Taxi",
+    lines: [
+      ["You","تاكسي! على وسط البلد.","taksi! 3ala wasa6 il-balad.","Taxi! To downtown."],
+      ["Driver","يلا اطلع. قديش بتدفع؟","yalla i6la3. 2addeish bitidfa3?","Get in. How much?"],
+      ["You","شغل العداد.","shaghghil il-3addaad.","Turn on the meter."],
+      ["Driver","ما في عداد. خمس دنانير.","maa fii 3addaad. khams danaaneer.","No meter. 5 dinars."],
+      ["You","كتير! ثلاث دنانير.","kteer! thalath danaaneer.","Too much! 3 dinars."],
+      ["Driver","أربعة.","arba3a.","Four."],
+      ["You","طيب يلا.","6ayyib yalla.","OK let's go."],
+      ["You","وقف هون، لو سمحت. شكرا.","wa22if hoon, law sama7t. shukran.","Stop here please. Thanks."],
+    ]
+  },
+  {
+    title: "At the Pharmacy",
+    lines: [
+      ["You","يعطيك العافية. بدي دوا لصداع.","ya36eek il-3aafye. biddi dawa la-9udaa3.","Hello. I need headache medicine."],
+      ["Pharmacist","عندك حرارة كمان؟","3indak 7araara kamaan?","Do you have a fever too?"],
+      ["You","لا، بس صداع قوي.","la2, bass 9udaa3 2awi.","No, just a bad headache."],
+      ["Pharmacist","خد هاي الحبوب. حبة كل ست ساعات.","khud haay il-7uboob. 7abbe kull sitt saa3aat.","Take these pills. One every 6 hours."],
+      ["You","قبل الأكل ولا بعده؟","2abil il-akil willa ba3du?","Before or after food?"],
+      ["Pharmacist","بعد الأكل.","ba3d il-akil.","After food."],
+      ["You","قديش سعرها؟","2addeish si3rha?","How much?"],
+      ["Pharmacist","دينار ونص.","deenaar w nu99.","A dinar and a half."],
+      ["You","تسلم. شكرا.","tislam. shukran.","Thanks."],
+    ]
+  },
+  {
+    title: "Making Plans on the Phone",
+    lines: [
+      ["You","آلو! كيفك يا أحمد؟","aalo! keefak ya a7mad?","Hello! How are you Ahmad?"],
+      ["Ahmad","أهلا! الحمد لله. شو أخبارك؟","ahla! il-7amdu lillah. shu akhbaarak?","Hi! Fine. What's up?"],
+      ["You","بدك تتغدى معي بكرة؟","biddak titghadda ma3i bukra?","Want to have lunch tomorrow?"],
+      ["Ahmad","بكرة؟ فاضي بعد الساعة وحدة.","bukra? faa9i ba3d is-saa3a wa7de.","Tomorrow? Free after 1."],
+      ["You","نتلاقى الساعة وحدة ونص عند المطعم؟","nitlaa2a is-saa3a wa7de w nu99 3ind il-ma63am?","Meet at 1:30 at the restaurant?"],
+      ["Ahmad","ماشي! بشوفك بكرة إن شاء الله.","maashi! bshoofak bukra inshaallah.","OK! See you tomorrow God willing."],
+      ["You","يلا باي. سلملي على العيلة.","yalla bye. sallimli 3al-3eile.","Bye. Say hi to the family."],
+      ["Ahmad","الله يسلمك. يلا باي.","allah yisalmak. yalla bye.","God bless you. Bye."],
+    ]
+  },
+];
+
+// ============ STATE ============
+let selectedDays = new Set();
+let currentCards = [];
+let currentIndex = 0;
+let correct = 0;
+let revealed = false;
+let missed = [];
+
+// ============ PROGRESS ============
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem('jaProg')) || {scores:{},streak:0,lastDate:null,totalSessions:0}; }
+  catch { return {scores:{},streak:0,lastDate:null,totalSessions:0}; }
+}
+function saveProgress(p) { localStorage.setItem('jaProg', JSON.stringify(p)); }
+function updateStreak() {
+  const p = loadProgress();
+  const today = new Date().toISOString().slice(0,10);
+  if (p.lastDate === today) return p;
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  p.streak = p.lastDate === yesterday ? (p.streak||0)+1 : 1;
+  p.lastDate = today;
+  p.totalSessions = (p.totalSessions||0)+1;
+  saveProgress(p);
+  return p;
+}
+
+// ============ HELPERS ============
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function getVocab() {
+  let items = [];
+  const days = selectedDays.size > 0 ? [...selectedDays] : Object.keys(VOCAB).map(Number);
+  days.forEach(d => { if(VOCAB[d]) VOCAB[d].forEach(v => items.push({day:d,ar:v[0],tr:v[1],en:v[2]})); });
+  return items;
+}
+function toggleDay(btn) {
+  const d = parseInt(btn.dataset.day);
+  if (selectedDays.has(d)) { selectedDays.delete(d); btn.classList.remove('active'); }
+  else { selectedDays.add(d); btn.classList.add('active'); }
+}
+function showMenu() {
+  document.getElementById('menu').classList.remove('hidden');
+  document.getElementById('activity').classList.add('hidden');
+}
+function showActivity(html) {
+  document.getElementById('menu').classList.add('hidden');
+  const el = document.getElementById('activity');
+  el.innerHTML = html;
+  el.classList.remove('hidden');
+}
+
+// ============ FLASHCARDS ============
+function startFlashcards() {
+  const p = updateStreak();
+  document.getElementById('streakDisplay').textContent = p.streak + ' day streak';
+  currentCards = shuffle(getVocab()).slice(0, 20);
+  currentIndex = 0; correct = 0; revealed = false; missed = [];
+  renderFlashcard();
+}
+function renderFlashcard() {
+  if (currentIndex >= currentCards.length) { renderScore('flashcards'); return; }
+  const c = currentCards[currentIndex];
+  showActivity(`
+    <div class="progress-text">${currentIndex+1} / ${currentCards.length}</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${(currentIndex/currentCards.length)*100}%"></div></div>
+    <div class="card flashcard" onclick="revealFlashcard()">
+      <div class="day-tag">Day ${c.day}</div>
+      <div class="arabic">${c.ar}</div>
+      <div class="translit ${revealed?'':'hidden'}">${c.tr}</div>
+      <div class="english ${revealed?'':'hidden'}">${c.en}</div>
+      <div class="tap-hint ${revealed?'hidden':''}">${'Tap to reveal'}</div>
+    </div>
+    <div class="btn-row ${revealed?'':'hidden'}" id="fcBtns">
+      <button class="btn btn-yes" onclick="fcAnswer(true)">Knew it</button>
+      <button class="btn btn-no" onclick="fcAnswer(false)">Didn't know</button>
+      <button class="btn btn-skip" onclick="fcAnswer(null)">Skip</button>
+    </div>
+    <div class="btn-row"><button class="btn btn-back" onclick="showMenu()">Back to menu</button></div>
+  `);
+}
+function revealFlashcard() {
+  revealed = true;
+  renderFlashcard();
+}
+function fcAnswer(knew) {
+  const c = currentCards[currentIndex];
+  if (knew === true) { correct++; const p=loadProgress(); p.scores[c.ar]=(p.scores[c.ar]||0)+1; saveProgress(p); }
+  else if (knew === false) { missed.push(c); const p=loadProgress(); p.scores[c.ar]=Math.max(0,(p.scores[c.ar]||0)-1); saveProgress(p); }
+  currentIndex++; revealed = false;
+  renderFlashcard();
+}
+
+// ============ QUIZ ============
+let quizMode = 'en2ar';
+let quizFeedbackTimeout = null;
+
+function startQuiz(mode) {
+  quizMode = mode;
+  const p = updateStreak();
+  document.getElementById('streakDisplay').textContent = p.streak + ' day streak';
+  currentCards = shuffle(getVocab()).slice(0, 15);
+  currentIndex = 0; correct = 0; missed = [];
+  renderQuiz();
+}
+function renderQuiz() {
+  if (currentIndex >= currentCards.length) { renderScore('quiz'); return; }
+  const c = currentCards[currentIndex];
+  const prompt = quizMode === 'en2ar'
+    ? `What is <span class="highlight">${c.en}</span> in Arabic?`
+    : `What does <span class="highlight">${c.ar}</span> (${c.tr}) mean?`;
+  const placeholder = quizMode === 'en2ar' ? 'Type Arabic or transliteration...' : 'Type the English meaning...';
+  showActivity(`
+    <div class="progress-text">${currentIndex+1} / ${currentCards.length}</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${(currentIndex/currentCards.length)*100}%"></div></div>
+    <div class="card">
+      <div class="quiz-prompt">${prompt}</div>
+      <input class="quiz-input" id="quizInput" placeholder="${placeholder}" autocomplete="off" onkeydown="if(event.key==='Enter')checkQuiz()">
+      <div id="quizFeedback"></div>
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn btn-primary" onclick="checkQuiz()">Check</button>
+        <button class="btn btn-skip" onclick="skipQuiz()">Skip</button>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-back" onclick="showMenu()">Back to menu</button></div>
+  `);
+  setTimeout(() => document.getElementById('quizInput')?.focus(), 100);
+}
+function checkQuiz() {
+  const input = document.getElementById('quizInput')?.value.trim();
+  if (!input) return;
+  const c = currentCards[currentIndex];
+  const fb = document.getElementById('quizFeedback');
+  let isCorrect = false;
+  if (quizMode === 'en2ar') {
+    isCorrect = input === c.ar || input.toLowerCase() === c.tr.toLowerCase().replace(/\?$/,'');
+  } else {
+    const enWords = new Set(c.en.toLowerCase().replace(/[\/\(\)]/g,' ').split(/\s+/).filter(Boolean));
+    const ansWords = new Set(input.toLowerCase().split(/\s+/).filter(Boolean));
+    isCorrect = [...ansWords].some(w => enWords.has(w)) || input.toLowerCase() === c.en.toLowerCase();
+  }
+  if (isCorrect) {
+    correct++;
+    fb.className = 'quiz-feedback correct';
+    fb.textContent = 'Correct!';
+  } else {
+    missed.push(c);
+    fb.className = 'quiz-feedback wrong';
+    fb.innerHTML = `Answer: <strong>${quizMode==='en2ar' ? c.ar+' ('+c.tr+')' : c.en}</strong>`;
+  }
+  clearTimeout(quizFeedbackTimeout);
+  quizFeedbackTimeout = setTimeout(() => { currentIndex++; renderQuiz(); }, 1500);
+}
+function skipQuiz() { currentIndex++; renderQuiz(); }
+
+// ============ SCORE SCREEN ============
+function renderScore(type) {
+  const pct = Math.round((correct/currentCards.length)*100);
+  const color = pct >= 90 ? '#4ade80' : pct >= 70 ? '#fbbf24' : '#f87171';
+  const msg = pct >= 90 ? 'Excellent! Ready to move on.' : pct >= 70 ? 'Good job! Review the missed words.' : 'Keep practicing! Try again soon.';
+  let missedHtml = '';
+  if (missed.length > 0) {
+    missedHtml = '<div style="text-align:left;margin-top:20px"><p style="color:#94a3b8;margin-bottom:10px;">Words to review:</p><div class="missed-list">';
+    missed.forEach(m => {
+      missedHtml += `<div class="missed-item"><span class="ar">${m.ar}</span><span class="en">${m.en} (${m.tr})</span></div>`;
+    });
+    missedHtml += '</div></div>';
+  }
+  showActivity(`
+    <div class="card score-card">
+      <div class="big-score" style="color:${color}">${pct}%</div>
+      <div class="score-label">${correct} / ${currentCards.length} correct</div>
+      <div class="score-bar"><div class="score-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="score-msg">${msg}</div>
+      ${missedHtml}
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="${type==='flashcards'?'startFlashcards()':'startQuiz(\''+quizMode+'\')'}">Try Again</button>
+      <button class="btn btn-back" onclick="showMenu()">Back to Menu</button>
+    </div>
+  `);
+}
+
+// ============ CONJUGATION ============
+function startConjugation() {
+  const verbs = Object.keys(CONJUGATIONS);
+  let html = '<div class="card"><h2 style="margin-bottom:16px;">Conjugation Drill</h2><p style="color:#94a3b8;margin-bottom:16px;">Choose a verb to practice:</p>';
+  verbs.forEach((v,i) => {
+    html += `<button class="nav-btn" style="margin-bottom:8px;width:100%" onclick="runConjugation('${v.replace(/'/g,"\\'")}')"><span class="label">${v}</span></button>`;
+  });
+  html += `<button class="nav-btn" style="margin-bottom:8px;width:100%;border-color:#2563eb" onclick="runConjugation('random')"><span class="label">Random</span></button>`;
+  html += '</div><div class="btn-row"><button class="btn btn-back" onclick="showMenu()">Back to menu</button></div>';
+  showActivity(html);
+}
+function runConjugation(verb) {
+  if (verb === 'random') verb = Object.keys(CONJUGATIONS)[Math.floor(Math.random()*Object.keys(CONJUGATIONS).length)];
+  const forms = CONJUGATIONS[verb];
+  const pronouns = Object.keys(forms);
+  let html = `<div class="card"><h2 style="margin-bottom:4px;">Conjugate:</h2><p style="color:#fbbf24;font-size:1.2em;margin-bottom:16px;">${verb}</p>`;
+  html += '<table class="conj-table"><tr><th>Pronoun</th><th>Your Answer</th></tr>';
+  pronouns.forEach((pr,i) => {
+    html += `<tr><td class="pronoun">${pr}</td><td><input id="conj${i}" onkeydown="if(event.key==='Enter'){const n=document.getElementById('conj${i+1}');if(n)n.focus();else checkConj('${verb.replace(/'/g,"\\'")}');}"></td></tr>`;
+  });
+  html += '</table>';
+  html += '<div class="btn-row" style="margin-top:16px"><button class="btn btn-primary" onclick="checkConj(\'' + verb.replace(/'/g,"\\'") + '\')">Check</button></div></div>';
+  html += '<div class="btn-row"><button class="btn btn-back" onclick="startConjugation()">Other verbs</button><button class="btn btn-back" onclick="showMenu()">Menu</button></div>';
+  showActivity(html);
+  setTimeout(() => document.getElementById('conj0')?.focus(), 100);
+}
+function checkConj(verb) {
+  const forms = CONJUGATIONS[verb];
+  const pronouns = Object.keys(forms);
+  let score = 0;
+  pronouns.forEach((pr,i) => {
+    const input = document.getElementById('conj'+i);
+    const answer = input.value.trim();
+    const expected = forms[pr];
+    const cell = input.parentElement;
+    if (answer === expected) {
+      cell.innerHTML = `<span class="correct-cell">${expected} &#10003;</span>`;
+      score++;
+    } else {
+      cell.innerHTML = `<span class="wrong-cell">${answer||'—'}</span> &rarr; <span class="correct-cell">${expected}</span>`;
+    }
+  });
+  const pct = Math.round(score/pronouns.length*100);
+  const row = document.createElement('div');
+  row.className = 'progress-text';
+  row.style.marginTop = '16px';
+  row.style.fontSize = '1.1em';
+  row.style.color = pct >= 80 ? '#4ade80' : '#fbbf24';
+  row.textContent = `${score}/${pronouns.length} correct (${pct}%)`;
+  document.querySelector('.conj-table').after(row);
+}
+
+// ============ CONVERSATIONS ============
+function startConversation() {
+  let html = '<div class="card"><h2 style="margin-bottom:16px;">Conversation Practice</h2><p style="color:#94a3b8;margin-bottom:16px;">Study real-world dialogues. Read aloud!</p>';
+  CONVERSATIONS.forEach((c,i) => {
+    html += `<button class="nav-btn" style="margin-bottom:8px;width:100%" onclick="showConversation(${i})"><span class="label">${c.title}</span></button>`;
+  });
+  html += '</div><div class="btn-row"><button class="btn btn-back" onclick="showMenu()">Back to menu</button></div>';
+  showActivity(html);
+}
+function showConversation(idx) {
+  const c = CONVERSATIONS[idx];
+  let html = `<div style="margin-bottom:16px"><h2>${c.title}</h2><p style="color:#94a3b8;font-size:0.9em;margin-top:4px;">Read each line aloud. Tap a bubble to reveal the translation.</p></div>`;
+  c.lines.forEach((line,i) => {
+    const [speaker,ar,tr,en] = line;
+    const cls = speaker === 'You' ? 'you' : 'them';
+    html += `<div class="chat-bubble ${cls}" onclick="this.querySelector('.chat-translit').classList.toggle('hidden');this.querySelector('.chat-en').classList.toggle('hidden');">
+      <div class="chat-speaker">${speaker}</div>
+      <div class="chat-arabic">${ar}</div>
+      <div class="chat-translit hidden">${tr}</div>
+      <div class="chat-en hidden" style="color:#94a3b8;font-size:0.85em;margin-top:4px;">${en}</div>
+    </div>`;
+  });
+  html += '<div class="btn-row" style="margin-top:20px"><button class="btn btn-primary" onclick="startConversation()">Other Scenarios</button><button class="btn btn-back" onclick="showMenu()">Menu</button></div>';
+  showActivity(html);
+}
+
+// ============ STATS ============
+function showStats() {
+  const p = loadProgress();
+  const allVocab = getVocab();
+  const total = allVocab.length;
+  const mastered = Object.values(p.scores||{}).filter(v=>v>=2).length;
+  const learning = Object.values(p.scores||{}).filter(v=>v>0&&v<2).length;
+  const notStarted = total - mastered - learning;
+  const pct = Math.round(mastered/total*100);
+  showActivity(`
+    <div class="card score-card">
+      <h2 style="margin-bottom:20px;">Your Progress</h2>
+      <div class="big-score">${p.streak||0}</div>
+      <div class="score-label">Day Streak</div>
+      <div style="margin-top:24px;text-align:left;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#4ade80;">Mastered</span><span>${mastered} words</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#fbbf24;">Learning</span><span>${learning} words</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#64748b;">Not started</span><span>${notStarted} words</span></div>
+        <div class="score-bar" style="margin-top:16px"><div class="score-bar-fill" style="width:${pct}%;background:#4ade80"></div></div>
+        <div style="text-align:center;color:#94a3b8;margin-top:8px;">${pct}% of vocabulary mastered</div>
+      </div>
+      <div style="margin-top:20px;color:#94a3b8;font-size:0.9em;">Total sessions: ${p.totalSessions||0}</div>
+    </div>
+    <div class="btn-row"><button class="btn btn-back" onclick="showMenu()">Back to Menu</button></div>
+  `);
+}
+
+// ============ INIT ============
+const p = updateStreak();
+document.getElementById('streakDisplay').textContent = (p.streak||0) + ' day streak';
+</script>
+</body>
+</html>
