@@ -253,6 +253,105 @@
 
   .hidden { display: none !important; }
 
+  /* Audio button */
+  .audio-btn {
+    background: none;
+    border: 2px solid #334155;
+    color: #4f9cf7;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.4em;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px;
+  }
+  .audio-btn:hover { border-color: #4f9cf7; background: #1e3a5f; }
+  .audio-btn:active { transform: scale(0.9); }
+  .audio-btn.playing { border-color: #4ade80; color: #4ade80; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .audio-btn-sm {
+    background: none;
+    border: 1px solid #334155;
+    color: #4f9cf7;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    flex-shrink: 0;
+  }
+  .audio-btn-sm:hover { border-color: #4f9cf7; background: #1e3a5f; }
+
+  /* Listening quiz */
+  .listen-choices {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .listen-choice {
+    background: #0f172a;
+    border: 2px solid #334155;
+    color: #e2e8f0;
+    padding: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1.05em;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .listen-choice:hover { border-color: #4f9cf7; background: #1e293b; }
+  .listen-choice.correct-choice { border-color: #4ade80; background: #052e16; }
+  .listen-choice.wrong-choice { border-color: #f87171; background: #450a0a; }
+
+  /* Shadowing */
+  .shadow-card {
+    text-align: center;
+    padding: 30px;
+  }
+  .shadow-phase {
+    font-size: 0.9em;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .shadow-timer {
+    font-size: 2em;
+    color: #fbbf24;
+    margin: 16px 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .recording-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: #f87171;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse 1s infinite;
+  }
+  .speed-btn {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85em;
+    margin: 0 4px;
+  }
+  .speed-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+
   /* Responsive */
   @media (max-width: 500px) {
     .nav { grid-template-columns: 1fr; }
@@ -292,10 +391,20 @@
         <span class="label">Conjugation Drill</span>
         <span class="desc">Verb forms practice</span>
       </button>
+      <button class="nav-btn" onclick="startListeningQuiz()">
+        <span class="icon">&#x1F50A;</span>
+        <span class="label">Listening Quiz</span>
+        <span class="desc">Hear Arabic, pick meaning</span>
+      </button>
+      <button class="nav-btn" onclick="startShadowing()">
+        <span class="icon">&#x1F3A4;</span>
+        <span class="label">Shadowing</span>
+        <span class="desc">Listen, repeat, speak</span>
+      </button>
       <button class="nav-btn" onclick="startConversation()">
         <span class="icon">&#x1F4AC;</span>
         <span class="label">Conversations</span>
-        <span class="desc">Real-world dialogues</span>
+        <span class="desc">Real-world dialogues with audio</span>
       </button>
       <button class="nav-btn" onclick="showStats()">
         <span class="icon">&#x1F4CA;</span>
@@ -849,6 +958,230 @@ function showStats() {
     </div>
     <div class="btn-row"><button class="btn btn-back" onclick="showMenu()">Back to Menu</button></div>
   `);
+}
+
+// ============ TEXT-TO-SPEECH ============
+let arVoice = null;
+let speechRate = 0.8;
+
+function initTTS() {
+  const voices = speechSynthesis.getVoices();
+  arVoice = voices.find(v => v.lang.startsWith('ar')) || null;
+}
+speechSynthesis.onvoiceschanged = initTTS;
+initTTS();
+
+function speak(text, rate) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ar-SA';
+  if (arVoice) u.voice = arVoice;
+  u.rate = rate || speechRate;
+  u.pitch = 1;
+  speechSynthesis.speak(u);
+  return u;
+}
+
+function speakBtn(text, btnEl) {
+  if (btnEl) btnEl.classList.add('playing');
+  const u = speak(text);
+  u.onend = () => { if (btnEl) btnEl.classList.remove('playing'); };
+  u.onerror = () => { if (btnEl) btnEl.classList.remove('playing'); };
+}
+
+// ============ LISTENING QUIZ ============
+function startListeningQuiz() {
+  const p = updateStreak();
+  document.getElementById('streakDisplay').textContent = p.streak + ' day streak';
+  currentCards = shuffle(getVocab()).slice(0, 12);
+  currentIndex = 0; correct = 0; missed = [];
+  renderListeningQuiz();
+}
+
+function renderListeningQuiz() {
+  if (currentIndex >= currentCards.length) { renderScore('listening'); return; }
+  const c = currentCards[currentIndex];
+  // Get 3 wrong choices
+  const allVocab = getVocab().filter(v => v.en !== c.en);
+  const wrongs = shuffle(allVocab).slice(0, 3);
+  const choices = shuffle([c, ...wrongs]);
+
+  showActivity(`
+    <div class="progress-text">${currentIndex+1} / ${currentCards.length}</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${(currentIndex/currentCards.length)*100}%"></div></div>
+    <div class="card" style="text-align:center;">
+      <p style="color:#94a3b8;margin-bottom:16px;">Listen and choose the correct meaning</p>
+      <button class="audio-btn" id="listenBtn" onclick="speakBtn('${c.ar.replace(/'/g,"\\'")}', this)">&#x1F50A;</button>
+      <p style="color:#475569;font-size:0.8em;margin-top:8px;">Tap to hear again</p>
+      <div class="listen-choices" id="listenChoices">
+        ${choices.map((ch, i) => `<button class="listen-choice" data-correct="${ch.en===c.en}" onclick="checkListening(this, ${ch.en===c.en})">${ch.en}</button>`).join('')}
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-back" onclick="showMenu()">Back to menu</button></div>
+  `);
+  // Auto-play on load
+  setTimeout(() => speak(c.ar), 300);
+}
+
+function checkListening(btn, isCorrect) {
+  const allBtns = document.querySelectorAll('.listen-choice');
+  allBtns.forEach(b => { b.onclick = null; b.style.cursor = 'default'; });
+  if (isCorrect) {
+    correct++;
+    btn.classList.add('correct-choice');
+  } else {
+    btn.classList.add('wrong-choice');
+    missed.push(currentCards[currentIndex]);
+    allBtns.forEach(b => { if (b.dataset.correct === 'true') b.classList.add('correct-choice'); });
+  }
+  setTimeout(() => { currentIndex++; renderListeningQuiz(); }, 1200);
+}
+
+// ============ SHADOWING MODE ============
+let shadowCards = [];
+let shadowIndex = 0;
+let shadowPhase = 'listen'; // listen, repeat, check
+let shadowTimer = null;
+
+function startShadowing() {
+  const p = updateStreak();
+  document.getElementById('streakDisplay').textContent = p.streak + ' day streak';
+  shadowCards = shuffle(getVocab()).slice(0, 10);
+  shadowIndex = 0;
+  renderShadow();
+}
+
+function renderShadow() {
+  if (shadowIndex >= shadowCards.length) {
+    showActivity(`
+      <div class="card score-card">
+        <div class="big-score" style="color:#4ade80;">Done!</div>
+        <div class="score-label">Shadowed ${shadowCards.length} phrases</div>
+        <div class="score-msg" style="margin-top:20px;">
+          Shadowing builds your ear AND your mouth muscles.<br>
+          Do this daily for fastest results.
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="startShadowing()">Again</button>
+        <button class="btn btn-back" onclick="showMenu()">Menu</button>
+      </div>
+    `);
+    return;
+  }
+  const c = shadowCards[shadowIndex];
+  showActivity(`
+    <div class="progress-text">${shadowIndex+1} / ${shadowCards.length}</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${(shadowIndex/shadowCards.length)*100}%"></div></div>
+    <div class="card shadow-card">
+      <div class="shadow-phase" id="shadowPhaseText">Step 1: Listen</div>
+      <div class="arabic" style="font-size:2.2em;direction:rtl;margin:16px 0;font-family:'Noto Sans Arabic','Geeza Pro','Traditional Arabic',serif;">${c.ar}</div>
+      <div style="color:#94a3b8;margin-bottom:4px;">${c.tr}</div>
+      <div style="color:#4ade80;margin-bottom:20px;">${c.en}</div>
+      <div style="margin-bottom:16px;">
+        <span style="color:#64748b;font-size:0.85em;">Speed: </span>
+        <button class="speed-btn ${speechRate===0.5?'active':''}" onclick="speechRate=0.5;document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');">Slow</button>
+        <button class="speed-btn ${speechRate===0.8?'active':''}" onclick="speechRate=0.8;document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');">Normal</button>
+        <button class="speed-btn ${speechRate===1.1?'active':''}" onclick="speechRate=1.1;document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');">Fast</button>
+      </div>
+      <button class="audio-btn" style="width:64px;height:64px;font-size:1.8em;" id="shadowPlayBtn" onclick="speakBtn('${c.ar.replace(/'/g,"\\'")}', this)">&#x1F50A;</button>
+      <div style="margin-top:20px;">
+        <p style="color:#94a3b8;font-size:0.9em;" id="shadowInstruction">Tap the speaker to listen, then repeat out loud</p>
+      </div>
+      <div class="btn-row" style="margin-top:20px;">
+        <button class="btn btn-primary" onclick="shadowRepeatPhase('${c.ar.replace(/'/g,"\\'")}')">Listen 3x (Auto)</button>
+        <button class="btn btn-yes" onclick="shadowIndex++;renderShadow();">Next</button>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-back" onclick="showMenu()">Back to menu</button></div>
+  `);
+  setTimeout(() => speak(c.ar), 400);
+}
+
+function shadowRepeatPhase(text) {
+  const phaseEl = document.getElementById('shadowPhaseText');
+  const instrEl = document.getElementById('shadowInstruction');
+  let count = 0;
+  function playNext() {
+    count++;
+    if (count > 3) {
+      phaseEl.textContent = 'Your turn! Say it out loud';
+      instrEl.textContent = 'Repeat 3 times, matching the rhythm and sound';
+      instrEl.style.color = '#fbbf24';
+      return;
+    }
+    phaseEl.textContent = `Listen ${count}/3 — then repeat`;
+    instrEl.textContent = count <= 2 ? 'Listen carefully to the sounds...' : 'Last one — prepare to repeat!';
+    const u = speak(text, count === 1 ? 0.6 : count === 2 ? 0.8 : 1.0);
+    u.onend = () => setTimeout(playNext, count < 3 ? 1500 : 800);
+  }
+  playNext();
+}
+
+// ============ UPDATE FLASHCARDS WITH AUDIO ============
+const _origRenderFlashcard = renderFlashcard;
+renderFlashcard = function() {
+  if (currentIndex >= currentCards.length) { renderScore('flashcards'); return; }
+  const c = currentCards[currentIndex];
+  showActivity(`
+    <div class="progress-text">${currentIndex+1} / ${currentCards.length}</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${(currentIndex/currentCards.length)*100}%"></div></div>
+    <div class="card flashcard" onclick="revealFlashcard()">
+      <div class="day-tag">Day ${c.day}</div>
+      <div class="arabic">${c.ar}</div>
+      <button class="audio-btn" onclick="event.stopPropagation();speakBtn('${c.ar.replace(/'/g,"\\'")}',this)">&#x1F50A;</button>
+      <div class="translit ${revealed?'':'hidden'}">${c.tr}</div>
+      <div class="english ${revealed?'':'hidden'}">${c.en}</div>
+      <div class="tap-hint ${revealed?'hidden':''}">Tap card to reveal meaning</div>
+    </div>
+    <div class="btn-row ${revealed?'':'hidden'}" id="fcBtns">
+      <button class="btn btn-yes" onclick="fcAnswer(true)">Knew it</button>
+      <button class="btn btn-no" onclick="fcAnswer(false)">Didn't know</button>
+      <button class="btn btn-skip" onclick="fcAnswer(null)">Skip</button>
+    </div>
+    <div class="btn-row"><button class="btn btn-back" onclick="showMenu()">Back to menu</button></div>
+  `);
+};
+
+// ============ UPDATE CONVERSATIONS WITH AUDIO ============
+const _origShowConv = showConversation;
+showConversation = function(idx) {
+  const c = CONVERSATIONS[idx];
+  let html = `<div style="margin-bottom:16px"><h2>${c.title}</h2><p style="color:#94a3b8;font-size:0.9em;margin-top:4px;">Tap speaker to hear, tap bubble for translation</p></div>`;
+  html += `<div class="btn-row" style="margin-bottom:16px"><button class="btn btn-primary" onclick="playFullConvo(${idx})">&#x1F50A; Play Full Conversation</button></div>`;
+  c.lines.forEach((line,i) => {
+    const [speaker,ar,tr,en] = line;
+    const cls = speaker === 'You' ? 'you' : 'them';
+    const arEsc = ar.replace(/'/g,"\\'");
+    html += `<div class="chat-bubble ${cls}" style="display:flex;align-items:flex-start;gap:8px;">
+      <div style="flex:1" onclick="this.querySelector('.chat-translit').classList.toggle('hidden');this.querySelector('.chat-en').classList.toggle('hidden');">
+        <div class="chat-speaker">${speaker}</div>
+        <div class="chat-arabic">${ar}</div>
+        <div class="chat-translit hidden">${tr}</div>
+        <div class="chat-en hidden" style="color:#94a3b8;font-size:0.85em;margin-top:4px;">${en}</div>
+      </div>
+      <button class="audio-btn-sm" onclick="speakBtn('${arEsc}',this)">&#x1F50A;</button>
+    </div>`;
+  });
+  html += '<div class="btn-row" style="margin-top:20px"><button class="btn btn-primary" onclick="startConversation()">Other Scenarios</button><button class="btn btn-back" onclick="showMenu()">Menu</button></div>';
+  showActivity(html);
+};
+
+function playFullConvo(idx) {
+  const lines = CONVERSATIONS[idx].lines;
+  let i = 0;
+  function playNext() {
+    if (i >= lines.length) return;
+    const u = speak(lines[i][1], 0.85);
+    const bubbles = document.querySelectorAll('.chat-bubble');
+    if (bubbles[i]) { bubbles[i].style.borderColor = '#4f9cf7'; }
+    u.onend = () => {
+      if (bubbles[i]) bubbles[i].style.borderColor = '';
+      i++;
+      setTimeout(playNext, 600);
+    };
+  }
+  playNext();
 }
 
 // ============ INIT ============
