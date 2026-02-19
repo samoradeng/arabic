@@ -210,9 +210,37 @@
     cursor: pointer;
     font-size: 0.9em;
     text-align: center;
+    position: relative;
   }
   .day-btn:hover { border-color: #4f9cf7; color: #e2e8f0; }
   .day-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+  .day-btn.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .day-btn.completed { border-color: #4ade80; }
+  .day-btn .lock-icon {
+    font-size: 0.7em;
+    display: block;
+    margin-top: 2px;
+  }
+  .day-btn .check-icon {
+    color: #4ade80;
+    font-size: 0.7em;
+    display: block;
+    margin-top: 2px;
+  }
+  .unlock-msg {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-top: 12px;
+    font-size: 0.85em;
+    color: #fbbf24;
+    text-align: center;
+  }
   .week-label { color: #64748b; font-size: 0.8em; margin-top: 12px; margin-bottom: 6px; }
 
   /* Missed words */
@@ -417,32 +445,7 @@
         <span class="desc">Your stats & streak</span>
       </button>
     </div>
-    <div id="daySelector">
-      <p style="color:#94a3b8;font-size:0.9em;margin-bottom:8px;">Filter by day (or leave blank for all):</p>
-      <div class="week-label">Week 1: Foundations</div>
-      <div class="day-grid">
-        <button class="day-btn" data-day="1" onclick="toggleDay(this)">Day 1</button>
-        <button class="day-btn" data-day="2" onclick="toggleDay(this)">Day 2</button>
-        <button class="day-btn" data-day="3" onclick="toggleDay(this)">Day 3</button>
-        <button class="day-btn" data-day="4" onclick="toggleDay(this)">Day 4</button>
-        <button class="day-btn" data-day="5" onclick="toggleDay(this)">Day 5</button>
-        <button class="day-btn" data-day="6" onclick="toggleDay(this)">Day 6</button>
-      </div>
-      <div class="week-label">Week 2: Conversations</div>
-      <div class="day-grid">
-        <button class="day-btn" data-day="8" onclick="toggleDay(this)">Day 8</button>
-        <button class="day-btn" data-day="9" onclick="toggleDay(this)">Day 9</button>
-        <button class="day-btn" data-day="10" onclick="toggleDay(this)">Day 10</button>
-        <button class="day-btn" data-day="12" onclick="toggleDay(this)">Day 12</button>
-        <button class="day-btn" data-day="13" onclick="toggleDay(this)">Day 13</button>
-      </div>
-      <div class="week-label">Week 3: Fluency</div>
-      <div class="day-grid">
-        <button class="day-btn" data-day="15" onclick="toggleDay(this)">Day 15</button>
-        <button class="day-btn" data-day="16" onclick="toggleDay(this)">Day 16</button>
-        <button class="day-btn" data-day="20" onclick="toggleDay(this)">Day 20</button>
-      </div>
-    </div>
+    <div id="daySelector"></div>
   </div>
 
   <!-- Activity Area -->
@@ -686,6 +689,66 @@ let missed = [];
 // ============ PROGRESS ============
 const WEEK_MAP = {1:1,2:1,3:1,4:1,5:1,6:1, 8:2,9:2,10:2,12:2,13:2, 15:3,16:3,20:3};
 const WEEK_DAYS = {1:[1,2,3,4,5,6], 2:[8,9,10,12,13], 3:[15,16,20]};
+const DAY_ORDER = [1,2,3,4,5,6,8,9,10,12,13,15,16,20];
+const UNLOCK_THRESHOLD = 0.6; // 60% mastery to unlock next day
+
+function isDayUnlocked(dayNum) {
+  const idx = DAY_ORDER.indexOf(dayNum);
+  if (idx <= 0) return true; // Day 1 always unlocked
+  const prevDay = DAY_ORDER[idx - 1];
+  const dm = getDayMastery(prevDay);
+  return dm.pct >= UNLOCK_THRESHOLD * 100;
+}
+
+function getHighestUnlockedDay() {
+  for (let i = DAY_ORDER.length - 1; i >= 0; i--) {
+    if (isDayUnlocked(DAY_ORDER[i])) return DAY_ORDER[i];
+  }
+  return 1;
+}
+
+function renderDaySelector() {
+  const container = document.getElementById('daySelector');
+  if (!container) return;
+  const wkNames = {1:'Week 1: Foundations', 2:'Week 2: Conversations', 3:'Week 3: Fluency'};
+  let html = '<p style="color:#94a3b8;font-size:0.9em;margin-bottom:8px;">Select a day to practice (unlock by mastering the previous day):</p>';
+
+  [1,2,3].forEach(wk => {
+    html += `<div class="week-label">${wkNames[wk]}</div><div class="day-grid">`;
+    WEEK_DAYS[wk].forEach(d => {
+      const unlocked = isDayUnlocked(d);
+      const dm = getDayMastery(d);
+      const completed = dm.pct >= 60;
+      const isActive = selectedDays.has(d);
+      let cls = 'day-btn';
+      if (!unlocked) cls += ' locked';
+      if (isActive) cls += ' active';
+      if (completed && unlocked) cls += ' completed';
+
+      let statusIcon = '';
+      if (!unlocked) {
+        statusIcon = '<span class="lock-icon">&#x1F512;</span>';
+      } else if (completed) {
+        statusIcon = '<span class="check-icon">&#x2713;</span>';
+      }
+      html += `<button class="${cls}" data-day="${d}" onclick="toggleDay(this)">Day ${d}${statusIcon}</button>`;
+    });
+    html += '</div>';
+  });
+
+  // Show what to unlock next
+  const nextLocked = DAY_ORDER.find(d => !isDayUnlocked(d));
+  if (nextLocked) {
+    const prevDay = DAY_ORDER[DAY_ORDER.indexOf(nextLocked) - 1];
+    const dm = getDayMastery(prevDay);
+    const needed = Math.ceil(UNLOCK_THRESHOLD * dm.total) - dm.mastered;
+    if (needed > 0) {
+      html += `<div class="unlock-msg">Master ${needed} more word${needed===1?'':'s'} from Day ${prevDay} to unlock Day ${nextLocked}</div>`;
+    }
+  }
+
+  container.innerHTML = html;
+}
 
 function loadProgress() {
   try {
@@ -743,18 +806,25 @@ function shuffle(arr) {
 }
 function getVocab() {
   let items = [];
-  const days = selectedDays.size > 0 ? [...selectedDays] : Object.keys(VOCAB).map(Number);
+  let days;
+  if (selectedDays.size > 0) {
+    days = [...selectedDays].filter(d => isDayUnlocked(d));
+  } else {
+    days = DAY_ORDER.filter(d => isDayUnlocked(d));
+  }
   days.forEach(d => { if(VOCAB[d]) VOCAB[d].forEach(v => items.push({day:d,ar:v[0],tr:v[1],en:v[2]})); });
   return items;
 }
 function toggleDay(btn) {
   const d = parseInt(btn.dataset.day);
+  if (!isDayUnlocked(d)) return;
   if (selectedDays.has(d)) { selectedDays.delete(d); btn.classList.remove('active'); }
   else { selectedDays.add(d); btn.classList.add('active'); }
 }
 function showMenu() {
   document.getElementById('menu').classList.remove('hidden');
   document.getElementById('activity').classList.add('hidden');
+  renderDaySelector();
 }
 function showActivity(html) {
   document.getElementById('menu').classList.add('hidden');
@@ -1441,6 +1511,7 @@ function playFullConvo(idx) {
 // ============ INIT ============
 const p = updateStreak();
 document.getElementById('streakDisplay').textContent = (p.streak||0) + ' day streak';
+renderDaySelector();
 </script>
 </body>
 </html>
