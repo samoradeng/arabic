@@ -195,53 +195,78 @@
   .conj-table .wrong-cell { color: #f87171; }
 
   /* Day selector */
-  .day-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-    margin: 16px 0;
-  }
-  .day-btn {
-    background: #0f172a;
-    border: 1px solid #334155;
-    color: #94a3b8;
-    padding: 10px 4px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.9em;
-    text-align: center;
+  /* Day Filter Dropdown */
+  .day-filter {
+    margin-bottom: 16px;
     position: relative;
   }
-  .day-btn:hover { border-color: #4f9cf7; color: #e2e8f0; }
-  .day-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
-  .day-btn.locked {
-    opacity: 0.4;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-  .day-btn.completed { border-color: #4ade80; }
-  .day-btn .lock-icon {
-    font-size: 0.7em;
-    display: block;
-    margin-top: 2px;
-  }
-  .day-btn .check-icon {
-    color: #4ade80;
-    font-size: 0.7em;
-    display: block;
-    margin-top: 2px;
-  }
-  .unlock-msg {
+  .day-filter-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     background: #1e293b;
     border: 1px solid #334155;
     border-radius: 10px;
     padding: 10px 14px;
-    margin-top: 12px;
-    font-size: 0.85em;
-    color: #fbbf24;
-    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    color: #e2e8f0;
+    font-size: 0.9em;
   }
-  .week-label { color: #64748b; font-size: 0.8em; margin-top: 12px; margin-bottom: 6px; }
+  .day-filter-toggle:hover { border-color: #4f9cf7; }
+  .day-filter-toggle .filter-label { font-weight: 600; }
+  .day-filter-toggle .filter-summary { color: #94a3b8; font-size: 0.85em; }
+  .day-filter-toggle .chevron {
+    transition: transform 0.2s;
+    color: #64748b;
+    font-size: 0.8em;
+  }
+  .day-filter-toggle.open .chevron { transform: rotate(180deg); }
+  .day-filter-panel {
+    display: none;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 12px 14px;
+    margin-top: -1px;
+  }
+  .day-filter-panel.show { display: block; }
+  .day-filter-toggle.open {
+    border-radius: 10px 10px 0 0;
+    border-color: #4f9cf7;
+  }
+  .day-filter-panel.show { border-color: #4f9cf7; }
+  .day-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .day-chip-row:last-child { margin-bottom: 0; }
+  .day-chip-group-label { color: #64748b; font-size: 0.75em; margin-bottom: 4px; }
+  .day-chip {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    padding: 5px 10px;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .day-chip:hover { border-color: #4f9cf7; color: #e2e8f0; }
+  .day-chip.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+  .day-chip.locked { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+  .day-chip.completed { border-color: #4ade80; }
+  .unlock-msg {
+    font-size: 0.8em;
+    color: #fbbf24;
+    margin-top: 8px;
+    padding: 0 2px;
+  }
 
   /* Missed words */
   .missed-list { margin-top: 16px; }
@@ -383,7 +408,7 @@
   /* Responsive */
   @media (max-width: 500px) {
     .nav { grid-template-columns: 1fr; }
-    .day-grid { grid-template-columns: repeat(4, 1fr); }
+    .day-chip { font-size: 0.75em; padding: 4px 8px; }
     .flashcard .arabic { font-size: 1.8em; }
   }
 </style>
@@ -398,6 +423,7 @@
 
   <!-- Main Menu -->
   <div id="menu">
+    <div id="daySelector"></div>
     <div class="nav">
       <button class="nav-btn" onclick="startFlashcards()">
         <span class="icon">&#x1F4DA;</span>
@@ -445,7 +471,6 @@
         <span class="desc">Your stats & streak</span>
       </button>
     </div>
-    <div id="daySelector"></div>
   </div>
 
   <!-- Activity Area -->
@@ -710,44 +735,67 @@ function getHighestUnlockedDay() {
 function renderDaySelector() {
   const container = document.getElementById('daySelector');
   if (!container) return;
-  const wkNames = {1:'Week 1: Foundations', 2:'Week 2: Conversations', 3:'Week 3: Fluency'};
-  let html = '<p style="color:#94a3b8;font-size:0.9em;margin-bottom:8px;">Select a day to practice (unlock by mastering the previous day):</p>';
+  const wkNames = {1:'Wk 1', 2:'Wk 2', 3:'Wk 3'};
+
+  // Build summary text
+  let summaryText;
+  if (selectedDays.size === 0) {
+    const unlocked = DAY_ORDER.filter(d => isDayUnlocked(d));
+    summaryText = `All unlocked days (${unlocked.length} of 21)`;
+  } else {
+    const sorted = [...selectedDays].sort((a,b)=>a-b);
+    summaryText = sorted.length <= 4
+      ? sorted.map(d => `Day ${d}`).join(', ')
+      : `${sorted.length} days selected`;
+  }
+
+  const isOpen = container.querySelector('.day-filter-panel.show') !== null;
+
+  let html = '<div class="day-filter">';
+  html += `<button class="day-filter-toggle${isOpen ? ' open' : ''}" onclick="toggleDayPanel()">`;
+  html += `<span><span class="filter-label">Practice Days</span> &middot; <span class="filter-summary">${summaryText}</span></span>`;
+  html += '<span class="chevron">&#x25BC;</span>';
+  html += '</button>';
+  html += `<div class="day-filter-panel${isOpen ? ' show' : ''}">`;
 
   [1,2,3].forEach(wk => {
-    html += `<div class="week-label">${wkNames[wk]}</div><div class="day-grid">`;
+    html += `<div class="day-chip-group-label">${wkNames[wk]}</div><div class="day-chip-row">`;
     WEEK_DAYS[wk].forEach(d => {
       const unlocked = isDayUnlocked(d);
       const dm = getDayMastery(d);
       const completed = dm.pct >= 60;
       const isActive = selectedDays.has(d);
-      let cls = 'day-btn';
+      let cls = 'day-chip';
       if (!unlocked) cls += ' locked';
       if (isActive) cls += ' active';
       if (completed && unlocked) cls += ' completed';
 
-      let statusIcon = '';
-      if (!unlocked) {
-        statusIcon = '<span class="lock-icon">&#x1F512;</span>';
-      } else if (completed) {
-        statusIcon = '<span class="check-icon">&#x2713;</span>';
-      }
-      html += `<button class="${cls}" data-day="${d}" onclick="toggleDay(this)">Day ${d}${statusIcon}</button>`;
+      const icon = !unlocked ? ' &#x1F512;' : (completed ? ' &#x2713;' : '');
+      html += `<button class="${cls}" data-day="${d}" onclick="toggleDay(this)">${d}${icon}</button>`;
     });
     html += '</div>';
   });
 
-  // Show what to unlock next
+  // Unlock hint
   const nextLocked = DAY_ORDER.find(d => !isDayUnlocked(d));
   if (nextLocked) {
     const prevDay = DAY_ORDER[DAY_ORDER.indexOf(nextLocked) - 1];
     const dm = getDayMastery(prevDay);
     const needed = Math.ceil(UNLOCK_THRESHOLD * dm.total) - dm.mastered;
     if (needed > 0) {
-      html += `<div class="unlock-msg">Master ${needed} more word${needed===1?'':'s'} from Day ${prevDay} to unlock Day ${nextLocked}</div>`;
+      html += `<div class="unlock-msg">Master ${needed} more from Day ${prevDay} to unlock Day ${nextLocked}</div>`;
     }
   }
 
+  html += '</div></div>';
   container.innerHTML = html;
+}
+
+function toggleDayPanel() {
+  const toggle = document.querySelector('.day-filter-toggle');
+  const panel = document.querySelector('.day-filter-panel');
+  toggle.classList.toggle('open');
+  panel.classList.toggle('show');
 }
 
 function loadProgress() {
@@ -820,6 +868,19 @@ function toggleDay(btn) {
   if (!isDayUnlocked(d)) return;
   if (selectedDays.has(d)) { selectedDays.delete(d); btn.classList.remove('active'); }
   else { selectedDays.add(d); btn.classList.add('active'); }
+  // Update summary text
+  const summaryEl = document.querySelector('.day-filter-toggle .filter-summary');
+  if (summaryEl) {
+    if (selectedDays.size === 0) {
+      const unlocked = DAY_ORDER.filter(d2 => isDayUnlocked(d2));
+      summaryEl.textContent = `All unlocked days (${unlocked.length} of 21)`;
+    } else {
+      const sorted = [...selectedDays].sort((a,b)=>a-b);
+      summaryEl.textContent = sorted.length <= 4
+        ? sorted.map(d2 => `Day ${d2}`).join(', ')
+        : `${sorted.length} days selected`;
+    }
+  }
 }
 function showMenu() {
   document.getElementById('menu').classList.remove('hidden');
