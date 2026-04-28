@@ -405,6 +405,221 @@
   }
   .speed-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
 
+  /* Capture (mic) */
+  .capture-card {
+    background: linear-gradient(135deg, #1e293b 0%, #1e3a5f 100%);
+    border: 1px solid #334155;
+    border-radius: 18px;
+    padding: 22px 20px 18px;
+    margin-bottom: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .capture-greeting {
+    color: #f8fafc;
+    font-size: 1.05em;
+    font-weight: 600;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+  .capture-sub {
+    color: #94a3b8;
+    font-size: 0.82em;
+    margin-bottom: 18px;
+  }
+  .suggestion-prompt {
+    color: #cbd5e1;
+    font-size: 0.95em;
+    font-style: italic;
+    line-height: 1.4;
+    min-height: 2.4em;
+    padding: 0 8px 14px;
+    transition: opacity 0.35s ease;
+  }
+  .suggestion-prompt::before {
+    content: '\201C';
+    color: #475569;
+    margin-right: 2px;
+  }
+  .suggestion-prompt::after {
+    content: '\201D';
+    color: #475569;
+    margin-left: 2px;
+  }
+  .suggestion-prompt.fading { opacity: 0; }
+  .mic-btn {
+    width: 78px; height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    font-size: 1.9em;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    animation: breathe 3.5s ease-in-out infinite;
+  }
+  .mic-btn:hover { background: #3b82f6; transform: scale(1.06); animation: none; }
+  .mic-btn:active { transform: scale(0.96); }
+  .mic-btn.recording {
+    background: #dc2626;
+    animation: pulse 1.2s infinite;
+    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.6);
+  }
+  .mic-btn:disabled { background: #475569; cursor: not-allowed; transform: none; box-shadow: none; animation: none; }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 4px 20px rgba(220, 38, 38, 0.6); }
+    50% { transform: scale(1.08); box-shadow: 0 4px 28px rgba(220, 38, 38, 0.9); }
+  }
+  @keyframes breathe {
+    0%, 100% { box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); }
+    50% { box-shadow: 0 4px 22px rgba(37, 99, 235, 0.55); }
+  }
+  .topic-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  .topic-chip {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    padding: 6px 12px;
+    border-radius: 14px;
+    font-size: 0.78em;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .topic-chip:hover { border-color: #4f9cf7; color: #f8fafc; transform: translateY(-1px); }
+  .topic-chip.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+  .topic-chip .emoji { margin-right: 4px; }
+  .capture-status {
+    margin-top: 12px;
+    color: #94a3b8;
+    font-size: 0.9em;
+    min-height: 1.2em;
+  }
+  .capture-status.error { color: #f87171; }
+  .capture-result {
+    margin-top: 16px;
+    padding: 16px;
+    background: #0f172a;
+    border-radius: 12px;
+    border: 1px solid #334155;
+    text-align: left;
+    display: none;
+  }
+  .capture-result.show { display: block; }
+  .capture-result .heard {
+    color: #94a3b8;
+    font-size: 0.85em;
+    margin-bottom: 10px;
+    font-style: italic;
+  }
+  .capture-result .arabic {
+    font-size: 1.7em;
+    direction: rtl;
+    text-align: right;
+    color: #f8fafc;
+    font-family: 'Noto Sans Arabic', 'Geeza Pro', 'Traditional Arabic', serif;
+    margin-bottom: 6px;
+  }
+  .capture-result .translit {
+    color: #4ade80;
+    font-size: 1em;
+    margin-bottom: 8px;
+  }
+  .capture-result .note {
+    color: #94a3b8;
+    font-size: 0.8em;
+    line-height: 1.4;
+    border-top: 1px solid #334155;
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+  .capture-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .capture-actions .btn { flex: 1; min-width: 100px; padding: 10px 14px; font-size: 0.9em; }
+
+  /* Setup modal */
+  .setup-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .setup-modal.show { display: flex; }
+  .setup-modal .panel {
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 480px;
+    width: 100%;
+    border: 1px solid #334155;
+  }
+  .setup-modal h2 { color: #f8fafc; font-size: 1.2em; margin-bottom: 12px; }
+  .setup-modal p { color: #94a3b8; font-size: 0.9em; line-height: 1.5; margin-bottom: 14px; }
+  .setup-modal a { color: #4f9cf7; }
+  .setup-modal input {
+    width: 100%;
+    padding: 12px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-family: monospace;
+    font-size: 0.9em;
+    margin-bottom: 14px;
+  }
+  .setup-modal input:focus { outline: none; border-color: #4f9cf7; }
+
+  /* My Sentences view */
+  .sentence-row {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    border: 1px solid #334155;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .sentence-row .text { flex: 1; min-width: 0; }
+  .sentence-row .ar {
+    font-size: 1.2em;
+    direction: rtl;
+    text-align: right;
+    color: #f8fafc;
+    font-family: 'Noto Sans Arabic', 'Geeza Pro', 'Traditional Arabic', serif;
+  }
+  .sentence-row .tr { color: #4ade80; font-size: 0.85em; margin-top: 2px; }
+  .sentence-row .en { color: #94a3b8; font-size: 0.8em; margin-top: 2px; }
+  .sentence-row .actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .sentence-row .icon-btn {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 1em;
+  }
+  .sentence-row .icon-btn:hover { background: #334155; color: #fff; }
+  .sentence-row .icon-btn.danger:hover { background: #991b1b; color: #fff; border-color: #991b1b; }
+  .sentence-empty {
+    text-align: center;
+    color: #64748b;
+    padding: 40px 20px;
+    font-size: 0.95em;
+    line-height: 1.5;
+  }
+
   /* Responsive */
   @media (max-width: 500px) {
     .nav { grid-template-columns: 1fr; }
@@ -423,8 +638,24 @@
 
   <!-- Main Menu -->
   <div id="menu">
+    <!-- Speak-and-translate capture -->
+    <div class="capture-card" id="captureCard">
+      <div class="capture-greeting" id="captureGreeting">Good morning</div>
+      <div class="capture-sub">Say it in English &mdash; I'll teach you to say it in Jordanian.</div>
+      <div class="suggestion-prompt" id="suggestionPrompt">Try: "I'm going to grab coffee before work."</div>
+      <button class="mic-btn" id="micBtn" onclick="toggleCapture()" title="Tap to record">&#x1F3A4;</button>
+      <div class="capture-status" id="captureStatus">&nbsp;</div>
+      <div class="topic-chips" id="topicChips"></div>
+      <div class="capture-result" id="captureResult"></div>
+    </div>
+
     <div id="daySelector"></div>
     <div class="nav">
+      <button class="nav-btn" onclick="showMySentences()">
+        <span class="icon">&#x2728;</span>
+        <span class="label">My Sentences</span>
+        <span class="desc"><span id="mySentenceCount">0</span> saved &mdash; review and shadow</span>
+      </button>
       <button class="nav-btn" onclick="startFlashcards()">
         <span class="icon">&#x1F4DA;</span>
         <span class="label">Flashcards</span>
@@ -475,6 +706,21 @@
 
   <!-- Activity Area -->
   <div id="activity" class="hidden"></div>
+</div>
+
+<!-- Translation API key setup -->
+<div class="setup-modal" id="setupModal">
+  <div class="panel">
+    <h2>One-time setup: Translation API key</h2>
+    <p>To translate your speech to Jordanian Arabic, this app uses Google's Gemini API. The free tier is generous and doesn't require a credit card.</p>
+    <p>1. Visit <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a><br>2. Sign in and click <strong>Create API key</strong><br>3. Paste it below.</p>
+    <input type="password" id="apiKeyInput" placeholder="AIza..." autocomplete="off" spellcheck="false">
+    <p style="font-size:0.8em;color:#64748b;">Your key is stored only in this browser's localStorage. It's never sent anywhere except directly to Google's API.</p>
+    <div class="btn-row">
+      <button class="btn btn-back" onclick="closeSetup()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveApiKey()">Save key</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1569,10 +1815,494 @@ function playFullConvo(idx) {
   playNext();
 }
 
+// ============ SPEAK & TRANSLATE ============
+// Browser STT (English) -> Gemini translation (Jordanian Arabic) -> save to personal corpus
+const PERSONAL_KEY = 'jaPersonal';
+const API_KEY_KEY = 'jaApiKey';
+let recognition = null;
+let isRecording = false;
+let lastCapture = null;
+let activeTopic = null;
+let lastSuggestionIdx = -1;
+let lastSuggestionInteraction = 0;
+
+// ----- Time-aware greeting -----
+function timeOfDay() {
+  const h = new Date().getHours();
+  if (h < 5) return 'late';
+  if (h < 12) return 'morning';
+  if (h < 17) return 'afternoon';
+  if (h < 22) return 'evening';
+  return 'late';
+}
+function renderGreeting() {
+  const el = document.getElementById('captureGreeting');
+  if (!el) return;
+  const tod = timeOfDay();
+  const personal = loadPersonal();
+  const today = new Date().toDateString();
+  const todayCount = personal.filter(s => new Date(s.ts).toDateString() === today).length;
+  let greet = { morning: 'Good morning', afternoon: 'Good afternoon', evening: 'Good evening', late: 'Late night thoughts?' }[tod];
+  if (todayCount >= 5) greet += ` &middot; <span style="color:#fbbf24;">${todayCount} today</span>`;
+  else if (todayCount > 0) greet += ` &middot; <span style="color:#94a3b8;font-weight:500;">${todayCount} today</span>`;
+  el.innerHTML = greet;
+}
+
+// ----- Topic-grouped suggestion bank -----
+const SUGGESTIONS = {
+  today: {
+    label: 'Today', emoji: '☀️',
+    by: {
+      morning: [
+        "I'm going to grab coffee before work.",
+        "I didn't sleep well last night.",
+        "I have a lot to do today.",
+        "I think it's going to be a long day.",
+        "What should I make for breakfast?"
+      ],
+      afternoon: [
+        "I'm starving. What's for lunch?",
+        "This day is dragging on.",
+        "I need a coffee right now.",
+        "I've been busy all morning.",
+        "I'm going to take a quick break."
+      ],
+      evening: [
+        "I'm so tired, I just want to relax.",
+        "What did you do today?",
+        "I had a really productive day.",
+        "I'm going to make dinner now.",
+        "What should we watch tonight?"
+      ],
+      late: [
+        "I can't sleep, my brain won't stop.",
+        "I have an early start tomorrow.",
+        "One more episode and then bed.",
+        "I should really go to sleep."
+      ]
+    }
+  },
+  feelings: {
+    label: 'Feelings', emoji: '💜',
+    list: [
+      "I'm really happy today, no idea why.",
+      "I'm a bit stressed about this week.",
+      "I miss my family a lot.",
+      "I'm honestly so excited about this.",
+      "I'm not in the mood to go out.",
+      "I feel kind of overwhelmed.",
+      "I'm in a great mood today.",
+      "Something's bothering me but I can't say what."
+    ]
+  },
+  food: {
+    label: 'Food', emoji: '🍽️',
+    list: [
+      "I'd love to try real mansaf.",
+      "Can I get this without onions?",
+      "What do you recommend? I'm hungry.",
+      "Is this spicy? I can't handle spicy food.",
+      "I'll have whatever you're having.",
+      "This is the best thing I've eaten all week.",
+      "Could we get the bill, please?",
+      "I'm full, thank you."
+    ]
+  },
+  family: {
+    label: 'Family', emoji: '👪',
+    list: [
+      "My mum called me three times today.",
+      "I have one brother and two sisters.",
+      "We're going to visit my parents this weekend.",
+      "My nephew just started talking, it's so cute.",
+      "I haven't seen my cousins in years.",
+      "We're a really close family."
+    ]
+  },
+  work: {
+    label: 'Work', emoji: '💼',
+    list: [
+      "I have a meeting in ten minutes.",
+      "Sorry, I'm running a bit late.",
+      "Can we reschedule for tomorrow?",
+      "This project is taking forever.",
+      "I'm working from home today.",
+      "I'm going to call it a day.",
+      "Honestly, I love what I do."
+    ]
+  },
+  travel: {
+    label: 'Travel', emoji: '✈️',
+    list: [
+      "How much would it be to Petra?",
+      "Is there a bus to downtown?",
+      "Can you take me to this address?",
+      "I'm just here for a week.",
+      "What's the best time to visit Wadi Rum?",
+      "Where can I find a good hotel nearby?",
+      "I'm a bit lost — can you help?"
+    ]
+  },
+  opinions: {
+    label: 'Opinions', emoji: '💭',
+    list: [
+      "Honestly, I don't really agree.",
+      "I think it's overrated, to be honest.",
+      "That's actually a really good point.",
+      "I see what you mean, but I'd say differently.",
+      "It depends on how you look at it.",
+      "I'd rather not get into that right now."
+    ]
+  }
+};
+
+function pickSuggestion(topic) {
+  let pool;
+  if (!topic || topic === 'today') {
+    pool = SUGGESTIONS.today.by[timeOfDay()] || SUGGESTIONS.today.by.afternoon;
+  } else {
+    pool = SUGGESTIONS[topic]?.list || [];
+  }
+  if (pool.length === 0) return '';
+  let idx;
+  // Avoid repeating the same one twice in a row
+  do { idx = Math.floor(Math.random() * pool.length); } while (pool.length > 1 && idx === lastSuggestionIdx);
+  lastSuggestionIdx = idx;
+  return pool[idx];
+}
+
+function setSuggestion(topic) {
+  const el = document.getElementById('suggestionPrompt');
+  if (!el) return;
+  const next = pickSuggestion(topic);
+  if (!next) return;
+  el.classList.add('fading');
+  setTimeout(() => {
+    el.textContent = next;
+    el.classList.remove('fading');
+  }, 200);
+}
+
+function renderTopicChips() {
+  const el = document.getElementById('topicChips');
+  if (!el) return;
+  const order = ['today', 'feelings', 'food', 'family', 'work', 'travel', 'opinions'];
+  el.innerHTML = order.map(key => {
+    const t = SUGGESTIONS[key];
+    const active = key === activeTopic ? ' active' : '';
+    return `<button class="topic-chip${active}" data-topic="${key}" onclick="selectTopic('${key}')"><span class="emoji">${t.emoji}</span>${t.label}</button>`;
+  }).join('');
+}
+
+function selectTopic(key) {
+  activeTopic = key;
+  lastSuggestionInteraction = Date.now();
+  renderTopicChips();
+  setSuggestion(key);
+}
+
+function rotateSuggestionIfIdle() {
+  const result = document.getElementById('captureResult');
+  if (result && result.classList.contains('show')) return;
+  if (isRecording) return;
+  // Don't yank the suggestion if user just picked a topic
+  if (Date.now() - lastSuggestionInteraction < 14000) return;
+  setSuggestion(activeTopic);
+}
+
+function loadPersonal() {
+  try { return JSON.parse(localStorage.getItem(PERSONAL_KEY)) || []; }
+  catch(e) { return []; }
+}
+function savePersonal(list) { localStorage.setItem(PERSONAL_KEY, JSON.stringify(list)); }
+function refreshPersonalCount() {
+  const el = document.getElementById('mySentenceCount');
+  if (el) el.textContent = loadPersonal().length;
+}
+
+function getApiKey() { return localStorage.getItem(API_KEY_KEY) || ''; }
+function openSetup() {
+  document.getElementById('apiKeyInput').value = getApiKey();
+  document.getElementById('setupModal').classList.add('show');
+  setTimeout(() => document.getElementById('apiKeyInput').focus(), 50);
+}
+function closeSetup() { document.getElementById('setupModal').classList.remove('show'); }
+function saveApiKey() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if (!k) { alert('Please enter an API key.'); return; }
+  localStorage.setItem(API_KEY_KEY, k);
+  closeSetup();
+  setStatus('Key saved. Tap the mic to start.');
+}
+
+function setStatus(msg, isError) {
+  const el = document.getElementById('captureStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.toggle('error', !!isError);
+}
+
+function initRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.lang = 'en-US';
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+  r.continuous = false;
+  return r;
+}
+
+function toggleCapture() {
+  if (isRecording) { stopCapture(); return; }
+  if (!getApiKey()) { openSetup(); return; }
+  if (!recognition) recognition = initRecognition();
+  if (!recognition) {
+    setStatus('Speech recognition not supported in this browser. Use Chrome or Edge.', true);
+    return;
+  }
+
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('micBtn').classList.add('recording');
+    setStatus('Listening... speak in English, then pause.');
+  };
+  recognition.onerror = (e) => {
+    isRecording = false;
+    document.getElementById('micBtn').classList.remove('recording');
+    if (e.error === 'no-speech') setStatus('Didn\'t hear anything. Try again.', true);
+    else if (e.error === 'not-allowed') setStatus('Microphone permission denied.', true);
+    else setStatus('Error: ' + e.error, true);
+  };
+  recognition.onend = () => {
+    isRecording = false;
+    document.getElementById('micBtn').classList.remove('recording');
+  };
+  recognition.onresult = async (e) => {
+    const transcript = e.results[0][0].transcript.trim();
+    if (!transcript) { setStatus('Didn\'t catch that. Try again.', true); return; }
+    setStatus('Translating: "' + transcript + '"...');
+    try {
+      const result = await translateToJordanian(transcript);
+      lastCapture = { en: transcript, ...result, ts: Date.now() };
+      renderCaptureResult(lastCapture);
+      setStatus('Got it. Save below or speak again.');
+    } catch (err) {
+      console.error(err);
+      setStatus('Translation failed: ' + err.message, true);
+    }
+  };
+
+  try { recognition.start(); }
+  catch (e) { setStatus('Could not start mic: ' + e.message, true); }
+}
+
+function stopCapture() {
+  if (recognition && isRecording) {
+    try { recognition.stop(); } catch(e) {}
+  }
+}
+
+async function translateToJordanian(englishText) {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error('API key missing');
+  const prompt = `You are a Jordanian Arabic teacher. Translate the following English sentence into casual spoken Jordanian (Levantine) Arabic — exactly how a Jordanian would actually say it in everyday conversation, NOT formal MSA.
+
+Use this transliteration scheme: 3=ع, 7=ح, 2=ء/glottal stop (ق often becomes 2), 9=ص, 6=ط, kh=خ, gh=غ, sh=ش, th=ث, dh=ذ. Long vowels: aa, ee, oo. Use lowercase letters; keep digits for the special sounds.
+
+English sentence: "${englishText}"
+
+Respond ONLY with valid minified JSON in this exact shape, no markdown, no commentary:
+{"ar":"<arabic script>","tr":"<transliteration using the scheme above>","note":"<one short sentence on register, alternative phrasings, or cultural usage — under 20 words>"}`;
+
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey);
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.3, responseMimeType: 'application/json' }
+  };
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error('API ' + resp.status + ': ' + errText.slice(0, 200));
+  }
+  const data = await resp.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('No translation in response');
+  let parsed;
+  try { parsed = JSON.parse(text); }
+  catch (e) {
+    const m = text.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('Could not parse response');
+    parsed = JSON.parse(m[0]);
+  }
+  if (!parsed.ar || !parsed.tr) throw new Error('Translation missing fields');
+  return { ar: parsed.ar, tr: parsed.tr, note: parsed.note || '' };
+}
+
+function renderCaptureResult(c) {
+  const el = document.getElementById('captureResult');
+  el.classList.add('show');
+  const safeAr = c.ar.replace(/'/g, "\\'");
+  el.innerHTML = `
+    <div class="heard">You said: "${escapeHtml(c.en)}"</div>
+    <div class="arabic">${escapeHtml(c.ar)}</div>
+    <div class="translit">${escapeHtml(c.tr)}</div>
+    ${c.note ? `<div class="note">${escapeHtml(c.note)}</div>` : ''}
+    <div class="capture-actions">
+      <button class="btn btn-primary" onclick="speakBtn('${safeAr}', this)">&#x1F50A; Hear again</button>
+      <button class="btn btn-yes" onclick="saveAndShadow(this)">&#x2728; Save &amp; shadow</button>
+      <button class="btn btn-skip" onclick="saveLastCapture(this, true)">Save only</button>
+      <button class="btn btn-skip" onclick="discardCapture()">Skip</button>
+    </div>
+  `;
+  // Auto-play once so the user immediately hears it
+  setTimeout(() => speak(c.ar), 200);
+}
+
+function saveAndShadow(btn) {
+  if (!lastCapture) return;
+  saveLastCapture(null, true);
+  // Drop into shadowing with just this card
+  shadowCards = [{ day:'me', ar:lastCapture.ar, tr:lastCapture.tr, en:lastCapture.en }];
+  shadowIndex = 0;
+  discardCapture();
+  renderShadow();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function saveLastCapture(btn, silent) {
+  if (!lastCapture) return;
+  const list = loadPersonal();
+  // Avoid duplicates if user double-taps
+  if (!list.some(s => s.id === 'p_' + lastCapture.ts)) {
+    list.unshift({
+      id: 'p_' + lastCapture.ts,
+      en: lastCapture.en,
+      ar: lastCapture.ar,
+      tr: lastCapture.tr,
+      note: lastCapture.note,
+      ts: lastCapture.ts
+    });
+    savePersonal(list);
+    refreshPersonalCount();
+    renderGreeting();
+  }
+  if (btn) { btn.textContent = '✓ Saved'; btn.disabled = true; }
+  if (!silent) setStatus('Saved. Tap the mic for another sentence.');
+}
+
+function discardCapture() {
+  lastCapture = null;
+  document.getElementById('captureResult').classList.remove('show');
+  setStatus(' ');
+}
+
+// ============ MY SENTENCES VIEW ============
+function showMySentences() {
+  const list = loadPersonal();
+  let html = `
+    <div class="btn-row" style="margin-bottom:16px;">
+      <button class="btn btn-back" onclick="showMenu()">&larr; Menu</button>
+      ${list.length ? `
+        <button class="btn btn-primary" onclick="startPersonalShadowing()">&#x1F3A4; Shadow all</button>
+        <button class="btn btn-primary" onclick="startPersonalQuiz()">&#x1F4DD; Quiz me</button>
+      ` : ''}
+      <button class="btn btn-skip" onclick="openSetup()">&#x2699; API key</button>
+    </div>
+  `;
+  if (list.length === 0) {
+    const examples = [
+      { en: "I'm running late, I'll be there in ten minutes.", ar: "متأخر شوي، رح أكون هناك بعد عشر دقائق.", tr: "mit2akhir shwayy, ra7 akoon hnaak ba3d 3ashar daqaayiq." },
+      { en: "What do you recommend? I'm really hungry.", ar: "شو بتنصحني؟ أنا جوعان كتير.", tr: "shu bitinsa7ni? ana joo3aan kteer." },
+      { en: "I had the best coffee this morning.", ar: "شربت أحسن قهوة الصبح.", tr: "shribt a7san 2ahwe i9-9ub7." }
+    ];
+    html += `
+      <div style="text-align:center;color:#94a3b8;padding:20px 8px 14px;font-size:0.95em;line-height:1.5;">
+        Your saved sentences will look like this. Tap the mic on the menu to add your first one.
+      </div>
+      ${examples.map(s => `
+        <div class="sentence-row" style="opacity:0.55;">
+          <div class="text">
+            <div class="ar">${escapeHtml(s.ar)}</div>
+            <div class="tr">${escapeHtml(s.tr)}</div>
+            <div class="en">${escapeHtml(s.en)}</div>
+          </div>
+          <div class="actions">
+            <button class="icon-btn" onclick="speakBtn('${s.ar.replace(/'/g, "\\'")}', this)" title="Hear example">&#x1F50A;</button>
+          </div>
+        </div>
+      `).join('')}
+      <div class="btn-row" style="margin-top:18px;">
+        <button class="btn btn-primary" onclick="showMenu()">&#x1F3A4; Record your first sentence</button>
+      </div>
+    `;
+  } else {
+    html += list.map(s => `
+      <div class="sentence-row">
+        <div class="text">
+          <div class="ar">${escapeHtml(s.ar)}</div>
+          <div class="tr">${escapeHtml(s.tr)}</div>
+          <div class="en">${escapeHtml(s.en)}</div>
+        </div>
+        <div class="actions">
+          <button class="icon-btn" onclick="speakBtn('${s.ar.replace(/'/g, "\\'")}', this)" title="Play">&#x1F50A;</button>
+          <button class="icon-btn danger" onclick="deletePersonal('${s.id}')" title="Delete">&#x1F5D1;</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  showActivity(html);
+}
+
+function deletePersonal(id) {
+  if (!confirm('Delete this sentence?')) return;
+  savePersonal(loadPersonal().filter(s => s.id !== id));
+  refreshPersonalCount();
+  showMySentences();
+}
+
+function personalAsCards() {
+  return loadPersonal().map(s => ({ day:'me', ar:s.ar, tr:s.tr, en:s.en }));
+}
+
+function startPersonalShadowing() {
+  const cards = personalAsCards();
+  if (cards.length === 0) return;
+  const pst = updateStreak();
+  document.getElementById('streakDisplay').textContent = pst.streak + ' day streak';
+  shadowCards = shuffle(cards);
+  shadowIndex = 0;
+  renderShadow();
+}
+
+function startPersonalQuiz() {
+  const cards = personalAsCards();
+  if (cards.length === 0) return;
+  const pst = updateStreak();
+  document.getElementById('streakDisplay').textContent = pst.streak + ' day streak';
+  currentCards = shuffle(cards).slice(0, Math.min(15, cards.length));
+  currentIndex = 0; correct = 0; missed = [];
+  quizMode = 'en2ar';
+  renderQuiz();
+}
+
 // ============ INIT ============
 const p = updateStreak();
 document.getElementById('streakDisplay').textContent = (p.streak||0) + ' day streak';
 renderDaySelector();
+refreshPersonalCount();
+renderGreeting();
+renderTopicChips();
+setSuggestion(null);
+// Rotate suggestion every 9s while user is idle
+setInterval(rotateSuggestionIfIdle, 9000);
 </script>
 </body>
 </html>

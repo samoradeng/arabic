@@ -65,7 +65,22 @@ Think in Arabic, handle any conversation, understand culture.
 | 20 | Cultural Deep Dive & Social Norms | [week3/day20.md](week3/day20.md) |
 | 21 | Final Review & Fluency Assessment | [week3/day21.md](week3/day21.md) |
 
-## Interactive Tools
+## Speak & Translate (browser tool)
+
+Open `practice.html` in Chrome or Edge and tap the microphone:
+
+1. **Say anything in English** — "I'm running late for my dentist appointment, can we push it to four?"
+2. The app translates it into casual **Jordanian Arabic** with transliteration and a one-line usage note, then plays it aloud
+3. Tap **Save & shadow** to drop straight into shadowing practice
+4. Saved sentences live under **My Sentences** and flow into all the other modes (flashcards, quiz, shadowing)
+
+You build a personal corpus of sentences from your actual life, then drill them until they become second nature.
+
+**One-time setup:** the first time you tap the mic, paste a free Google Gemini API key (no credit card needed — get one at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)). It's stored only in your browser.
+
+If you don't know what to say, the app rotates contextual prompts based on time of day and topic chips (Today, Feelings, Food, Family, Work, Travel, Opinions).
+
+## Interactive Tools (CLI)
 
 ```bash
 # Run the interactive practice tool
